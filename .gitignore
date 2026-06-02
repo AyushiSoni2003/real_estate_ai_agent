@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.env
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.next/
+
+# Docker / OS
+.DS_Store
+*.log

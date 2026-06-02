@@ -1,0 +1,1 @@
+"""Lead SQLAlchemy model."""
