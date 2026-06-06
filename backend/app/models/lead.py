@@ -8,6 +8,7 @@ from app.core.database import Base
 from backend.app.models.ai_interaction import AIInteraction
 from backend.app.models.appointment import Appointment
 from backend.app.models.follow_up_log import FollowUpLog
+from backend.app.models.lead_activity import LeadActivity
 from backend.app.models.message import Message
 from backend.app.models.agent import Agent
 
@@ -71,6 +72,10 @@ class Lead(Base):
         back_populates="lead", cascade="all, delete-orphan"
     )
     ai_interactions: Mapped[list["AIInteraction"]] = relationship(
+        back_populates="lead",
+        cascade="all, delete-orphan",
+    )
+    activities: Mapped[list["LeadActivity"]] = relationship(
         back_populates="lead",
         cascade="all, delete-orphan",
     )
