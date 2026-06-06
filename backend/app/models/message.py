@@ -15,6 +15,12 @@ class MessageDirection(str, enum.Enum):
     OUTBOUND = "outbound"
     INBOUND  = "inbound"
 
+class MessageStatus(str, enum.Enum):
+    SENT = "sent"
+    DELIVERED = "delivered"
+    READ = "read"
+    FAILED = "failed"
+
 class Message(Base):
     __tablename__ = "messages"
 
@@ -30,10 +36,20 @@ class Message(Base):
     direction: Mapped[MessageDirection] = mapped_column(
         Enum(MessageDirection), default=MessageDirection.OUTBOUND
     )
+    status: Mapped[MessageStatus] = mapped_column(
+        Enum(MessageStatus),
+        default=MessageStatus.SENT,
+        index=True,
+    )
     body: Mapped[str] = mapped_column(Text, nullable=False)
     external_id: Mapped[str | None] = mapped_column(String(255))
     sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-
+    delivered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     lead: Mapped["Lead"] = relationship(back_populates="messages")
