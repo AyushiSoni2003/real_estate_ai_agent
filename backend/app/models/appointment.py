@@ -8,12 +8,18 @@ from app.core.database import Base
 from backend.app.models.lead import Lead
 from backend.app.models.agent import Agent
 from backend.app.models.property import Property
+
 class AppointmentStatus(str, enum.Enum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     NO_SHOW = "no_show"
+
+class MeetingType(str, enum.Enum):
+    ONSITE = "onsite"
+    VIDEO_CALL = "video_call"
+    PHONE_CALL = "phone_call"
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -32,6 +38,12 @@ class Appointment(Base):
     )
     scheduled_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
+    )
+    meeting_type: Mapped[MeetingType] = mapped_column(
+        Enum(MeetingType),
+        default=MeetingType.ONSITE,
+        nullable=False,
+        index=True,
     )
     status: Mapped[AppointmentStatus] = mapped_column(
         Enum(AppointmentStatus),
