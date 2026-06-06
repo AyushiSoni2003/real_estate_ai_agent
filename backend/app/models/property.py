@@ -2,11 +2,13 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import (
-    String, Text, Integer, Float, Boolean,
-    DateTime, ForeignKey, func, ARRAY
-)
+DateTime, ForeignKey, String, Text, Integer, Float, Boolean, func)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
+from backend.app.models.appointment import Appointment
+from backend.app.models.agent import Agent
+from backend.app.models.property_media import PropertyMedia
+ 
 
 class Property(Base):
     __tablename__ = "properties"
@@ -28,12 +30,16 @@ class Property(Base):
     latitude: Mapped[float | None] = mapped_column(Float)
     longitude: Mapped[float | None] = mapped_column(Float)
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)
-    image_urls: Mapped[list[str] | None] = mapped_column(ARRAY(String))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
+
     agent: Mapped["Agent"] = relationship(back_populates="properties")
     appointments: Mapped[list["Appointment"]] = relationship(
         back_populates="property"
+    )
+    media_files: Mapped[list["PropertyMedia"]] = relationship(
+        back_populates="property",
+        cascade="all, delete-orphan"
     )
