@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import String, Text, DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
+from backend.app.models.ai_interaction import AIInteraction
 from backend.app.models.appointment import Appointment
 from backend.app.models.follow_up_log import FollowUpLog
 from backend.app.models.message import Message
@@ -68,4 +69,8 @@ class Lead(Base):
     )
     messages: Mapped[list["Message"]] = relationship(
         back_populates="lead", cascade="all, delete-orphan"
+    )
+    ai_interactions: Mapped[list["AIInteraction"]] = relationship(
+        back_populates="lead",
+        cascade="all, delete-orphan",
     )
