@@ -61,7 +61,7 @@ class Appointment(Base):
         onupdate=func.now(),
     )
     lead: Mapped["Lead"] = relationship(back_populates="appointments")
-    agent: Mapped["Agent"] = relationship()
+    agent: Mapped["Agent"] = relationship(back_populates="appointments")
     property: Mapped["Property"] = relationship(
         back_populates="appointments"
     )
