@@ -6,19 +6,26 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 from app.core.config import settings
+import warnings
 
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=10,
-    max_overflow=20,
-)
+# Create engine lazily and tolerate missing async DB drivers during import
+try:
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        echo=settings.DEBUG,
+        pool_size=10,
+        max_overflow=20,
+    )
 
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+    AsyncSessionLocal = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+except ModuleNotFoundError as e:
+    warnings.warn(f"Database driver not available at import time: {e}")
+    engine = None
+    AsyncSessionLocal = None
 
 class Base(DeclarativeBase):
     pass

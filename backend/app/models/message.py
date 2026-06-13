@@ -1,10 +1,13 @@
 import uuid
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Text, DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
-from backend.app.models.lead import Lead
+
+if TYPE_CHECKING:
+    from app.models.lead import Lead
 
 class MessageChannel(str, enum.Enum):
     WHATSAPP = "whatsapp"

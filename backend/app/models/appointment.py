@@ -2,12 +2,15 @@
 import uuid
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import DateTime, Enum, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
-from backend.app.models.lead import Lead
-from backend.app.models.agent import Agent
-from backend.app.models.property import Property
+
+if TYPE_CHECKING:
+    from app.models.lead import Lead
+    from app.models.agent import Agent
+    from app.models.property import Property
 
 class AppointmentStatus(str, enum.Enum):
     PENDING = "pending"

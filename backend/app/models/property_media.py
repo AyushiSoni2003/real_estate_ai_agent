@@ -1,7 +1,10 @@
 from sqlalchemy import String, Text, DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
-from backend.app.models.property import Property
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.property import Property
 from datetime import datetime
 import uuid
 import enum

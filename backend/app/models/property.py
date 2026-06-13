@@ -5,9 +5,9 @@ from sqlalchemy import (
 DateTime, ForeignKey, String, Text, Integer, Float, Boolean, func)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
-from backend.app.models.appointment import Appointment
-from backend.app.models.agent import Agent
-from backend.app.models.property_media import PropertyMedia
+from app.models.appointment import Appointment
+from app.models.agent import Agent
+from app.models.property_media import PropertyMedia
  
 
 class Property(Base):

@@ -5,12 +5,15 @@ from datetime import datetime
 from sqlalchemy import String, Text, DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
-from backend.app.models.ai_interaction import AIInteraction
-from backend.app.models.appointment import Appointment
-from backend.app.models.follow_up_log import FollowUpLog
-from backend.app.models.lead_activity import LeadActivity
-from backend.app.models.message import Message
-from backend.app.models.agent import Agent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.ai_interaction import AIInteraction
+    from app.models.appointment import Appointment
+    from app.models.follow_up_log import FollowUpLog
+    from app.models.lead_activity import LeadActivity
+    from app.models.message import Message
+    from app.models.agent import Agent
 
 class LeadStatus(str, enum.Enum):
     NEW = "new"

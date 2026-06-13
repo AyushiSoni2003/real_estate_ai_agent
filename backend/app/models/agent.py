@@ -1,12 +1,15 @@
 """Agent SQLAlchemy model."""
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import Enum, String, Boolean, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
-from backend.app.models.appointment import Appointment
-from models.lead import Lead
-from models.property import Property
+
+if TYPE_CHECKING:
+    from app.models.appointment import Appointment
+    from app.models.lead import Lead
+    from app.models.property import Property
 import enum
 
 class UserRole(str, enum.Enum):

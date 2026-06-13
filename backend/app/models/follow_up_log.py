@@ -3,8 +3,11 @@ import enum
 from datetime import datetime
 from sqlalchemy import DateTime, Enum, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
 from app.core.database import Base
-from backend.app.models.lead import Lead
+
+if TYPE_CHECKING:
+    from app.models.lead import Lead
 
 class FollowUpDay(int, enum.Enum):
     DAY_1  = 1
