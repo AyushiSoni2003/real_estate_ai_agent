@@ -30,3 +30,18 @@ async def health_check():
 @app.get("/")
 async def root():
     return {"message": "RealtyIQ API is running"}
+
+
+# Register API route modules
+from app.api.v1 import auth, leads, properties, appointments, messages, property_media, ai_interactions, follow_up_logs, lead_activities
+
+# Include all routers with /api/v1 prefix
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(leads.router, prefix="/api/v1")
+app.include_router(properties.router, prefix="/api/v1")
+app.include_router(appointments.router, prefix="/api/v1")
+app.include_router(messages.router, prefix="/api/v1")
+app.include_router(property_media.router, prefix="/api/v1")
+app.include_router(ai_interactions.router, prefix="/api/v1")
+app.include_router(follow_up_logs.router, prefix="/api/v1")
+app.include_router(lead_activities.router, prefix="/api/v1")
