@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
+from app.core.security import get_current_user
 from app.models.lead import Lead
+from app.models.agent import Agent
 from app.schemas.lead import LeadCreate, LeadUpdate, LeadResponse
 
 router = APIRouter(prefix="/leads", tags=["leads"])
@@ -12,11 +14,11 @@ router = APIRouter(prefix="/leads", tags=["leads"])
 @router.post("/", response_model=LeadResponse, status_code=201)
 async def create_lead(
     data: LeadCreate,
+    current_user: Agent = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # TODO: Replace hardcoded agent_id with current user from JWT
-    from uuid import uuid4
-    lead = Lead(**data.model_dump(), agent_id=uuid4())
+    """Create a new lead for the authenticated agent."""
+    lead = Lead(**data.model_dump(), agent_id=current_user.id)
     db.add(lead)
     await db.flush()
     await db.refresh(lead)

@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import list
-
+from typing import List
 
 class UserLogin(BaseModel):
     username: EmailStr | str
