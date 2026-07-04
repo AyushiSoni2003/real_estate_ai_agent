@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     - OPENAI_API_KEY: OpenAI API key for AI features
     - SECRET_KEY: JWT signing secret (CHANGE IN PRODUCTION)
     """
-    
+    00.
     # Application Settings
     APP_NAME: str = "RealtyIQ"
     DEBUG: bool = False
@@ -35,10 +35,25 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     
     # External APIs
-    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: str = ""
     
+   # JWT Settings  
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+
+    # Twilio Settings
+    # I will have to change twilio with whatsapp API settings in the future
+    # TWILIO_ACCOUNT_SID: str = ""
+    # TWILIO_AUTH_TOKEN: str = ""
+    # TWILIO_WHATSAPP_FROM: str = "whatsapp:+14155238886"
+
+    # Email Settings
+    # Will have to change email settings with SMTP settings in the future
+    # SENDGRID_API_KEY: str = ""
+    # SENDGRID_FROM_EMAIL: str = "no-reply@realtyiq.com"
+
     # Security
-    SECRET_KEY: str = "your-super-secret-key-change-this-in-production"
+    SECRET_KEY: str = "CHANGE_ME_IN_PRODUCTION"  # Change this in production for security
     
     class Config:
         """Pydantic configuration."""
