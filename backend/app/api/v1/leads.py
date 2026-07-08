@@ -1,4 +1,5 @@
 """Leads API endpoints."""
+from time import timezone
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,9 @@ from app.core.security import get_current_user
 from app.models.lead import Lead
 from app.models.agent import Agent
 from app.schemas.lead import LeadCreate, LeadUpdate, LeadResponse
+from backend.app.tasks.follow_up import schedule_follow_ups_for_lead
+from datetime import datetime, timezone
+
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -22,6 +26,12 @@ async def create_lead(
     db.add(lead)
     await db.flush()
     await db.refresh(lead)
+
+    # Schedule follow-ups for the new lead
+    schedule_follow_ups_for_lead(
+        lead_id=str(lead.id),
+        created_at=lead.created_at or datetime.now(timezone.utc),
+    )
     return lead
 
 @router.get("/", response_model=list[LeadResponse])
