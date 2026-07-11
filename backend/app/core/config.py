@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     - OPENAI_API_KEY: OpenAI API key for AI features
     - SECRET_KEY: JWT signing secret (CHANGE IN PRODUCTION)
     """
-    00.
+    
     # Application Settings
     APP_NAME: str = "RealtyIQ"
     DEBUG: bool = False
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     
     # External APIs
-    OPENAI_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
     
    # JWT Settings  
     ALGORITHM: str = "HS256"

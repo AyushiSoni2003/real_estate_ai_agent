@@ -45,3 +45,8 @@ celery[redis]==5.4.0
 langgraph==0.2.28
 twilio==9.3.3
 sendgrid==6.11.0
+
+asyncpg
+pydantic-settings
+langchain
+langgraph

@@ -1,5 +1,5 @@
-from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.agents.state import AgentState
@@ -7,11 +7,16 @@ from app.models.property import Property
 from app.models.lead import Lead
 from app.core.config import settings
 
-llm = ChatOpenAI(
-    model="gpt-4o",
-    api_key=settings.OPENAI_API_KEY,
-    temperature=0.7,
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.5-flash",
+    api_key=settings.GOOGLE_API_KEY,
+    temperature=1.0,  # Gemini 3.0+ defaults to 1.0
+    max_tokens=None,
+    timeout=None,
+    max_retries=2,
+    # other params...
 )
+
 
 async def qualify_lead_node(state: AgentState, db: AsyncSession) -> AgentState:
     """
