@@ -1,4 +1,5 @@
 """Application configuration and environment settings."""
+from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import Optional
 
@@ -42,24 +43,25 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
     # Twilio Settings
-    # I will have to change twilio with whatsapp API settings in the future
-    # TWILIO_ACCOUNT_SID: str = ""
-    # TWILIO_AUTH_TOKEN: str = ""
-    # TWILIO_WHATSAPP_FROM: str = "whatsapp:+14155238886"
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_WHATSAPP_FROM: str = ""
 
     # Email Settings
-    # Will have to change email settings with SMTP settings in the future
-    # SENDGRID_API_KEY: str = ""
-    # SENDGRID_FROM_EMAIL: str = "no-reply@realtyiq.com"
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_USE_TLS: bool = True
+    SMTP_FROM_EMAIL: str = ""
 
     # Security
     SECRET_KEY: str = "CHANGE_ME_IN_PRODUCTION"  # Change this in production for security
     
     class Config:
         """Pydantic configuration."""
-        env_file = ".env"  # Load from .env file
-        case_sensitive = True  # Environment variables are case-sensitive
-
+        env_file = Path(__file__).resolve().parents[2] / ".env"  # Load from backend/.env file
+        case_sensitive = True  # Environment variables are case-
 
 # Create global settings instance
 settings = Settings()

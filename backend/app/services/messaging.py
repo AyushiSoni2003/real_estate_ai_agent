@@ -1,7 +1,8 @@
-"""Messaging service (Twilio + SendGrid)."""
+"""Messaging service (Twilio + SMTP)."""
+import asyncio
+import smtplib
+from email.message import EmailMessage
 from twilio.rest import Client as TwilioClient
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.models.lead import Lead
@@ -11,7 +12,6 @@ twilio_client = TwilioClient(
     settings.TWILIO_ACCOUNT_SID,
     settings.TWILIO_AUTH_TOKEN,
 )
-sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
 
 async def send_message(
     lead: Lead,
@@ -50,12 +50,20 @@ async def _send_whatsapp(phone: str, body: str) -> str:
     return message.sid
 
 async def _send_email(email: str, name: str, body: str) -> str:
-    mail = Mail(
-        from_email=settings.SENDGRID_FROM_EMAIL,
-        to_emails=email,
-        subject="A message from your RealtyIQ agent",
-        plain_text_content=body,
-        html_content=f"<p>{body.replace(chr(10), '<br>')}</p>",
-    )
-    response = sg_client.send(mail)
-    return response.headers.get("X-Message-Id", "")
+    message = EmailMessage()
+    message["Subject"] = "A message from your RealtyIQ agent"
+    message["From"] = settings.SMTP_FROM_EMAIL
+    message["To"] = email
+    message.set_content(body)
+    message.add_alternative(f"<p>{body.replace(chr(10), '<br>')}</p>", subtype="html")
+
+    def _send_sync() -> str:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as smtp:
+            if settings.SMTP_USE_TLS:
+                smtp.starttls()
+            if settings.SMTP_USERNAME:
+                smtp.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+            smtp.send_message(message)
+        return "smtp-message"
+
+    return await asyncio.to_thread(_send_sync)
