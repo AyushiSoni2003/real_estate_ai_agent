@@ -9,7 +9,7 @@ from app.core.security import get_current_user
 from app.models.lead import Lead
 from app.models.agent import Agent
 from app.schemas.lead import LeadCreate, LeadUpdate, LeadResponse
-from backend.app.tasks.follow_up import schedule_follow_ups_for_lead
+from app.tasks.follow_up import schedule_follow_ups_for_lead
 from datetime import datetime, timezone
 
 

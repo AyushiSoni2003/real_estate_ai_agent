@@ -50,4 +50,3 @@ asyncpg
 pydantic-settings
 langchain
 langgraph
-sendgrid= 
