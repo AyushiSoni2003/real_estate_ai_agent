@@ -7,6 +7,8 @@ from app.models.message import Message, MessageChannel, MessageStatus
 from app.models.property_media import PropertyMedia, MediaType
 from app.models.ai_interaction import AIInteraction,AIInteractionType
 from app.models.lead_activity import LeadActivity,LeadActivityType
+from app.models.agent_availability import AgentAvailability
+from app.models.conversation_state import ConversationState
 __all__ = [
     "Agent", "Lead", "LeadStatus",
     "Property", "Appointment", "AppointmentStatus", "MeetingType",
@@ -14,4 +16,5 @@ __all__ = [
     "PropertyMedia","MediaType",
     "AIInteraction","AIInteractionType",
     "LeadActivity","LeadActivityType",
+    "AgentAvailability", "ConversationState",
 ]
