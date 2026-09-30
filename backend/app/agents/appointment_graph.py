@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from uuid import uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
 from langgraph.graph import StateGraph, END
@@ -90,6 +91,26 @@ def build_appointment_graph():
 
 appointment_graph = build_appointment_graph()
 
+
+def _encode_json_value(value):
+    """Encode datetimes anywhere in the graph state as marked JSON objects."""
+    if isinstance(value, datetime):
+        return {
+            "__realtyiq_type__": "datetime",
+            "value": value.isoformat(),
+        }
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
+def _decode_json_value(value: dict):
+    """Restore datetime values encoded by ``_encode_json_value``."""
+    if (
+        value.get("__realtyiq_type__") == "datetime"
+        and set(value) == {"__realtyiq_type__", "value"}
+    ):
+        return datetime.fromisoformat(value["value"])
+    return value
+
 async def start_appointment_flow(
     lead_id: str,
     agent_id: str,
@@ -163,19 +184,15 @@ async def _persist_state(lead_id: str, state: dict, db: AsyncSession):
     )
     existing = result.scalar_one_or_none()
 
-    serialisable = {
-        k: (v.isoformat() if hasattr(v, "isoformat") else v)
-        for k, v in state.items()
-        if k != "available_slots" or True
-    }
+    serialized_state = json.dumps(state, default=_encode_json_value)
 
     if existing:
-        existing.graph_state = json.dumps(serialisable)
+        existing.graph_state = serialized_state
         existing.status = state.get("status", "negotiating")
     else:
         db.add(ConversationState(
             lead_id=UUID(lead_id),
-            graph_state=json.dumps(serialisable),
+            graph_state=serialized_state,
             status=state.get("status", "negotiating"),
         ))
     await db.flush()
@@ -193,4 +210,4 @@ async def _load_state(lead_id: str, db: AsyncSession) -> dict | None:
     record = result.scalar_one_or_none()
     if not record:
         return None
-    return json.loads(record.graph_state)
+    return json.loads(record.graph_state, object_hook=_decode_json_value)
