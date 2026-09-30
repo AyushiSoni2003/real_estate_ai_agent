@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = True
     SMTP_FROM_EMAIL: str = ""
 
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/calendar/callback"
+    GOOGLE_CALENDAR_SCOPES: list[str] = ["https://www.googleapis.com/auth/calendar.events"]
+
     # Security
     SECRET_KEY: str = "CHANGE_ME_IN_PRODUCTION"  # Change this in production for security
     
