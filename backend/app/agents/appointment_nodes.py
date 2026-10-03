@@ -23,14 +23,18 @@ async def fetch_slots_node(
     next node to offer to the lead.
     """
     from uuid import UUID
-    result = await db.execute(
+    query = (
         select(AgentAvailability)
         .where(AgentAvailability.agent_id == UUID(state["agent_id"]))
         .where(AgentAvailability.is_booked == False)
         .where(AgentAvailability.start_time > datetime.now(timezone.utc))
         .order_by(AgentAvailability.start_time)
-        .limit(3)
     )
+    already_offered = [slot["start"] for slot in state.get("offered_slots", [])]
+    if already_offered:
+        query = query.where(AgentAvailability.start_time.not_in(already_offered))
+
+    result = await db.execute(query.limit(3))
     slots = result.scalars().all()
 
     available: list[TimeSlot] = [

@@ -14,10 +14,8 @@ importlib.import_module("app.models")
 
 
 @pytest.fixture
-async def client():
-    # Each test gets a fresh in-memory database. This keeps API tests away
-    # from the developer's PostgreSQL database and avoids sharing asyncpg
-    # connections across pytest event loops.
+async def db_session():
+    # Each test gets a fresh in-memory database, isolated from PostgreSQL.
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -32,14 +30,21 @@ async def client():
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
 
+    async with session_factory() as session:
+        yield session
+
+    await engine.dispose()
+
+
+@pytest.fixture
+async def client(db_session):
     async def override_get_db():
-        async with session_factory() as session:
-            try:
-                yield session
-                await session.commit()
-            except Exception:
-                await session.rollback()
-                raise
+        try:
+            yield db_session
+            await db_session.commit()
+        except Exception:
+            await db_session.rollback()
+            raise
 
     app.dependency_overrides[get_db] = override_get_db
     try:
@@ -49,7 +54,6 @@ async def client():
             yield test_client
     finally:
         app.dependency_overrides.pop(get_db, None)
-        await engine.dispose()
 
 
 @pytest.fixture

@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
 from langgraph.graph import StateGraph, END
+from langchain_core.runnables import RunnableConfig
 from app.agents.appointment_state import AppointmentAgentState
 from app.agents.appointment_nodes import (
     fetch_slots_node,
@@ -53,10 +54,22 @@ def mark_max_rounds_exceeded(state: AppointmentAgentState) -> AppointmentAgentSt
 def build_appointment_graph():
     graph = StateGraph(AppointmentAgentState)
 
-    graph.add_node("fetch_slots", fetch_slots_node)
+    async def fetch_slots_with_db(
+        state: AppointmentAgentState, config: RunnableConfig
+    ) -> AppointmentAgentState:
+        db = config["configurable"]["db"]
+        return await fetch_slots_node(state, db)
+
+    async def confirm_booking_with_db(
+        state: AppointmentAgentState, config: RunnableConfig
+    ) -> AppointmentAgentState:
+        db = config["configurable"]["db"]
+        return await confirm_booking_node(state, db)
+
+    graph.add_node("fetch_slots", fetch_slots_with_db)
     graph.add_node("propose_slots", propose_slots_node)
     graph.add_node("parse_reply", parse_reply_node)
-    graph.add_node("confirm_booking", confirm_booking_node)
+    graph.add_node("confirm_booking", confirm_booking_with_db)
     graph.add_node("route_start", lambda state: state)
     graph.add_node("mark_max_rounds_exceeded", mark_max_rounds_exceeded)
 
