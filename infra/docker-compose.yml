@@ -2,7 +2,7 @@
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgis/postgis:15-3.5
     env_file:
       - .env
     environment:
