@@ -1,9 +1,5 @@
-import importlib
-import sys
-import types
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -13,34 +9,6 @@ from app.models.agent import Agent
 from app.models.agent_availability import AgentAvailability
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.lead import Lead, LeadStatus
-
-
-@pytest.fixture
-def appointment_flow(monkeypatch):
-    # The graph module constructs ChatOpenAI at import time. Supply a tiny
-    # stand-in so these tests never need the package or make network calls.
-    class FakeChatOpenAI:
-        def __init__(self, **kwargs):
-            self.ainvoke = AsyncMock()
-
-    fake_openai = types.ModuleType("langchain_openai")
-    fake_openai.ChatOpenAI = FakeChatOpenAI
-    monkeypatch.setitem(sys.modules, "langchain_openai", fake_openai)
-    config_module = importlib.import_module("app.core.config")
-    monkeypatch.setattr(
-        config_module, "settings", SimpleNamespace(OPENAI_API_KEY="test-key")
-    )
-
-    nodes = importlib.import_module("app.agents.appointment_nodes")
-    graph_module = importlib.import_module("app.agents.appointment_graph")
-    calendar_service = importlib.import_module("app.services.calendar_service")
-    monkeypatch.setattr(
-        calendar_service,
-        "create_calendar_event",
-        AsyncMock(return_value="mock-calendar-event"),
-        raising=False,
-    )
-    return graph_module, nodes
 
 
 async def make_lead_and_availability(db_session, slot_count=6):

@@ -1,4 +1,9 @@
 import pytest
+import importlib
+import sys
+import types
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import StaticPool
 from httpx import AsyncClient, ASGITransport
@@ -54,6 +59,34 @@ async def client(db_session):
             yield test_client
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture
+def appointment_flow(monkeypatch):
+    # Keep appointment conversation tests offline and independent of the
+    # optional OpenAI provider package and API credentials.
+    class FakeChatOpenAI:
+        def __init__(self, **kwargs):
+            self.ainvoke = AsyncMock()
+
+    fake_openai = types.ModuleType("langchain_openai")
+    fake_openai.ChatOpenAI = FakeChatOpenAI
+    monkeypatch.setitem(sys.modules, "langchain_openai", fake_openai)
+    config_module = importlib.import_module("app.core.config")
+    monkeypatch.setattr(
+        config_module, "settings", SimpleNamespace(OPENAI_API_KEY="test-key")
+    )
+
+    nodes = importlib.import_module("app.agents.appointment_nodes")
+    graph_module = importlib.import_module("app.agents.appointment_graph")
+    calendar_service = importlib.import_module("app.services.calendar_service")
+    monkeypatch.setattr(
+        calendar_service,
+        "create_calendar_event",
+        AsyncMock(return_value="mock-calendar-event"),
+        raising=False,
+    )
+    return graph_module, nodes
 
 
 @pytest.fixture

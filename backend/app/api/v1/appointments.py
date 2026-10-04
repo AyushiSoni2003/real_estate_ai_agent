@@ -7,9 +7,45 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.appointment import Appointment
 from app.models.agent import Agent
+from app.models.lead import Lead
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse
+from app.services.messaging import send_message
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
+
+
+@router.post("/leads/{lead_id}/negotiation", status_code=200)
+async def start_appointment_negotiation(
+    lead_id: UUID,
+    property_id: UUID | None = None,
+    current_user: Agent = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Start offering visit times to one of the current agent's leads."""
+    lead = await db.get(Lead, lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    if lead.agent_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized for this lead")
+
+    from app.agents.appointment_graph import start_appointment_flow
+
+    state = await start_appointment_flow(
+        lead_id=str(lead.id),
+        agent_id=str(current_user.id),
+        property_id=str(property_id) if property_id else None,
+        db=db,
+    )
+    message = state.get("agent_message")
+    if message:
+        channel = "whatsapp" if lead.phone else "email" if lead.email else None
+        if channel is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Lead has no phone number or email address",
+            )
+        await send_message(lead, message, channel, db)
+    return state
 
 
 @router.post("/", response_model=AppointmentResponse, status_code=201)

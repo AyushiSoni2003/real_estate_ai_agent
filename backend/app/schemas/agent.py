@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
+from app.models.agent import UserRole
 
 
 class AgentCreate(BaseModel):
@@ -24,7 +25,7 @@ class AgentResponse(BaseModel):
     email: EmailStr
     full_name: str
     phone: str | None
-    role: Literal["agent", "admin"]
+    role: UserRole
     is_active: bool
     created_at: datetime
     updated_at: datetime | None

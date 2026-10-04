@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     
     # External APIs
     GOOGLE_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
     
    # JWT Settings  
     ALGORITHM: str = "HS256"

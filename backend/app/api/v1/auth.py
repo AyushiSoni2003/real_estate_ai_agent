@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.core.database import get_db
 from app.core.security import create_access_token, verify_password, hash_password, get_current_user
 from app.models.agent import Agent
-from app.schemas.auth import UserLogin, Token, TokenData
+from app.schemas.auth import UserLogin, Token
 from app.schemas.agent import AgentCreate, AgentResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -67,17 +67,17 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     
     # Create JWT token
     access_token = create_access_token(
-        data={"sub": str(agent.id), "email": agent.email, "scopes": ["agent"]}
+        data={"sub": agent.email, "scopes": [agent.role.value]}
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(current_user: TokenData = Depends(get_current_user)):
+async def refresh_token(current_user: Agent = Depends(get_current_user)):
     """Refresh JWT token."""
     access_token = create_access_token(
-        data={"sub": current_user.email, "scopes": current_user.scopes or ["agent"]}
+        data={"sub": current_user.email, "scopes": [current_user.role.value]}
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
