@@ -24,7 +24,7 @@ def upgrade() -> None:
     # The PostGIS package may be installed on the server without being enabled
     # in this database. Geometry columns require the extension to be present.
     op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
-    op.add_column('properties', sa.Column('location', geoalchemy2.types.Geometry(geometry_type='POINT', srid=4326, from_text='ST_GeomFromEWKT', name='geometry'), nullable=True))
+    op.add_column('properties', sa.Column('location', geoalchemy2.types.Geometry(geometry_type='POINT', srid=4326, from_text='ST_GeomFromEWKT', name='geometry', spatial_index=False), nullable=True))
     op.add_column('properties', sa.Column('amenities', sa.ARRAY(sa.String()), nullable=True))
     op.add_column('properties', sa.Column('image_urls', sa.ARRAY(sa.String()), nullable=True))
     op.add_column(
