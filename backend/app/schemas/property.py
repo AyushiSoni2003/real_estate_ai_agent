@@ -13,6 +13,7 @@ class PropertyCreate(BaseModel):
     area_sqft: int | None = Field(None, gt=0)
     latitude: float | None = None
     longitude: float | None = None
+    amenities: list[str] | None = None
     image_urls: list[str] | None = None
 
 class PropertyResponse(BaseModel):

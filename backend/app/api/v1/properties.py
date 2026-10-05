@@ -3,12 +3,14 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from geoalchemy2.elements import WKTElement
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.property import Property
 from app.models.agent import Agent
 from app.schemas.property import PropertyCreate, PropertyResponse
 from app.schemas.search import PropertySearchParams, Pagination, PaginatedResponse
+from app.services.property_embedder import embed_and_index_property
 
 router = APIRouter(prefix="/properties", tags=["properties"])
 
@@ -20,14 +22,24 @@ async def create_property(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new property listing."""
+    prop_data = data.model_dump()
+    if data.latitude is not None and data.longitude is not None:
+        prop_data["location"] = WKTElement(
+            f"POINT({data.longitude} {data.latitude})",
+            srid=4326,
+        )
+
     prop = Property(
         id=uuid4(),
         agent_id=current_user.id,
-        **data.model_dump()
+        **prop_data,
     )
     db.add(prop)
     await db.flush()
     await db.refresh(prop)
+    await embed_and_index_property(prop)
+    prop.qdrant_indexed = True
+    await db.commit()
     return prop
 
 
@@ -106,13 +118,51 @@ async def update_property(
     
     if prop.agent_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to update this property")
-    
+
+    allowed_fields = {
+        "title", "description", "address", "city", "price", "bedrooms",
+        "bathrooms", "area_sqft", "latitude", "longitude", "amenities",
+        "image_urls", "is_available",
+    }
+    unknown_fields = data.keys() - allowed_fields
+    if unknown_fields:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported property fields: {', '.join(sorted(unknown_fields))}",
+        )
+
+    clearable_fields = {
+        "description", "bedrooms", "bathrooms", "area_sqft", "latitude",
+        "longitude", "amenities", "image_urls",
+    }
+    changed_fields: set[str] = set()
     for key, value in data.items():
-        if value is not None:
+        if value is None and key not in clearable_fields:
+            continue
+        if getattr(prop, key) != value:
             setattr(prop, key, value)
+            changed_fields.add(key)
+
+    if changed_fields & {"latitude", "longitude"}:
+        if prop.latitude is not None and prop.longitude is not None:
+            prop.location = WKTElement(
+                f"POINT({prop.longitude} {prop.latitude})",
+                srid=4326,
+            )
+        else:
+            prop.location = None
     
     await db.flush()
     await db.refresh(prop)
+    embedding_fields = {
+        "title", "description", "address", "city", "price", "bedrooms",
+        "bathrooms", "area_sqft", "amenities", "latitude", "longitude",
+        "is_available",
+    }
+    if changed_fields & embedding_fields:
+        await embed_and_index_property(prop)
+        prop.qdrant_indexed = True
+    await db.commit()
     return prop
 
 
