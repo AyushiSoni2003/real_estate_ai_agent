@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # External APIs
     GOOGLE_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
+
     
    # JWT Settings  
     ALGORITHM: str = "HS256"
@@ -63,7 +64,11 @@ class Settings(BaseSettings):
 
     # Security
     SECRET_KEY: str = "CHANGE_ME_IN_PRODUCTION"  # Change this in production for security
-    
+
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    OPENAI_EMBEDDING_DIMENSIONS: int = 1536
+    QDRANT_COLLECTION_NAME: str = "properties"
+
     class Config:
         """Pydantic configuration."""
         env_file = Path(__file__).resolve().parents[2] / ".env"  # Load from backend/.env file

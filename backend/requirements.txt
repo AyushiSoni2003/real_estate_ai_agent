@@ -7,6 +7,7 @@ uvicorn[standard]==0.24.0
 # Database
 sqlalchemy==2.0.23
 asyncpg==0.29.0
+GeoAlchemy2
 aiosqlite==0.20.0
 alembic==1.12.1
 

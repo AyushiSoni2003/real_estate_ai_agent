@@ -1,14 +1,26 @@
 """Property SQLAlchemy model."""
 import uuid
 from datetime import datetime
+
 from sqlalchemy import (
-DateTime, ForeignKey, String, Text, Integer, Float, Boolean, func)
+    ARRAY,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from geoalchemy2 import Geometry
+
 from app.core.database import Base
-from app.models.appointment import Appointment
 from app.models.agent import Agent
+from app.models.appointment import Appointment
 from app.models.property_media import PropertyMedia
- 
+
 
 class Property(Base):
     __tablename__ = "properties"
@@ -29,11 +41,16 @@ class Property(Base):
     area_sqft: Mapped[int | None] = mapped_column(Integer)
     latitude: Mapped[float | None] = mapped_column(Float)
     longitude: Mapped[float | None] = mapped_column(Float)
+    location: Mapped[object | None] = mapped_column(
+        Geometry(geometry_type="POINT", srid=4326), nullable=True
+    )
+    amenities: Mapped[list[str] | None] = mapped_column(ARRAY(String))
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)
+    image_urls: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    qdrant_indexed: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-
 
     agent: Mapped["Agent"] = relationship(back_populates="properties")
     appointments: Mapped[list["Appointment"]] = relationship(
@@ -41,5 +58,5 @@ class Property(Base):
     )
     media_files: Mapped[list["PropertyMedia"]] = relationship(
         back_populates="property",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )

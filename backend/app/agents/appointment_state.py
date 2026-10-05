@@ -8,7 +8,7 @@ class TimeSlot(TypedDict):
     slot_label: str
 
 
-class AppointmentAgentState(TypedDict, total=False):
+class AppointmentAgentState(TypedDict):
     lead_id: str
     agent_id: str
     property_id: str | None
@@ -29,5 +29,5 @@ class AppointmentAgentState(TypedDict, total=False):
     ]
     google_event_id: str | None
     error: str | None
-    _intent: Literal["accepted", "new_slots", "unclear"]
+    intent: Literal["accepted", "new_slots", "unclear"]
     _is_resume: bool
