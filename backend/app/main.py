@@ -2,12 +2,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.services.vector_store import init_qdrant_collection
 
 app = FastAPI(
     title=settings.APP_NAME,
     description="AI-powered real estate automation platform",
     version="0.1.0",
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    init_qdrant_collection()
 
 app.add_middleware(
     CORSMiddleware,
