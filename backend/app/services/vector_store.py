@@ -73,17 +73,20 @@ async def search_similar_properties(
     """Return similar property IDs, scores, and payloads from Qdrant."""
     query_vector = await embed_text(query_text)
 
-    query_filter = None
-    if agent_id:
-        query_filter = Filter(
-            must=[
-                FieldCondition(key="agent_id", match=MatchValue(value=agent_id)),
-                FieldCondition(
-                    key="is_available",
-                    match=MatchValue(value=True),
-                ),
-            ]
+    conditions = [
+        FieldCondition(
+            key="is_available",
+            match=MatchValue(value=True),
         )
+    ]
+    if agent_id:
+        conditions.append(
+            FieldCondition(
+                key="agent_id",
+                match=MatchValue(value=agent_id),
+            )
+        )
+    query_filter = Filter(must=conditions)
 
     results = qdrant.query_points(
         collection_name=settings.QDRANT_COLLECTION_NAME,

@@ -9,8 +9,14 @@ from app.core.security import get_current_user
 from app.models.property import Property
 from app.models.agent import Agent
 from app.schemas.property import PropertyCreate, PropertyResponse
-from app.schemas.search import PropertySearchParams, Pagination, PaginatedResponse
+from app.schemas.search import (
+    PropertySearchParams,
+    Pagination,
+    PaginatedResponse,
+    SemanticPropertyResult,
+)
 from app.services.property_embedder import embed_and_index_property
+from app.services.search import semantic_property_search
 from app.services.vector_store import delete_property_vector
 
 router = APIRouter(prefix="/properties", tags=["properties"])
@@ -91,6 +97,24 @@ async def search_properties(
     query = query.offset(skip).limit(limit)
     result = await db.execute(query)
     return result.scalars().all()
+
+
+@router.get("/semantic-search", response_model=list[SemanticPropertyResult])
+async def semantic_search_properties(
+    query: str = Query(..., min_length=3),
+    radius_km: float = Query(10.0, gt=0, le=100),
+    top_k: int = Query(5, ge=1, le=20),
+    current_user: Agent = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Search the authenticated agent's available listings by meaning/location."""
+    return await semantic_property_search(
+        query=query,
+        db=db,
+        agent_id=str(current_user.id),
+        radius_km=radius_km,
+        top_k=top_k,
+    )
 
 
 @router.get("/{property_id}", response_model=PropertyResponse)

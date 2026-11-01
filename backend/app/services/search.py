@@ -37,6 +37,7 @@ async def semantic_property_search(
                 lng=lng,
                 radius_km=radius_km,
                 db=db,
+                agent_id=agent_id,
             )
             break
 
@@ -46,21 +47,23 @@ async def semantic_property_search(
         agent_id=agent_id,
     )
 
-    if geo_ids is not None:
-        filtered = [
-            r for r in vector_results
-            if r["property_id"] in geo_ids
-        ]
-    else:
+    if geo_ids is None:
+        # If location extraction or geocoding produced no usable coordinates,
+        # keep semantic search useful without a geographic constraint.
         filtered = vector_results
-
-    if not filtered:
-        filtered = vector_results[:top_k]
+    else:
+        # Keep the radius constraint strict. An empty intersection means there
+        # are no semantic matches inside the requested area; never return
+        # listings outside that area as a fallback.
+        filtered = [
+            result for result in vector_results
+            if result["property_id"] in geo_ids
+        ]
 
     top_ids = [r["property_id"] for r in filtered[:top_k]]
     score_map = {r["property_id"]: r["score"] for r in filtered}
 
-    properties = await _fetch_properties_by_ids(top_ids, db)
+    properties = await _fetch_properties_by_ids(top_ids, db, agent_id)
 
     return [
         {
@@ -93,13 +96,15 @@ async def _postgis_radius_search(
     lng: float,
     radius_km: float,
     db: AsyncSession,
+    agent_id: str | None = None,
 ) -> set[str]:
     """
     Returns IDs of all properties within radius_km of the given point.
     ST_DWithin with geography type measures in metres — divide km by 1000.
     """
     radius_metres = radius_km * 1000
-    sql = text("""
+    agent_filter = "AND agent_id = :agent_id" if agent_id else ""
+    sql = text(f"""
         SELECT id::text
         FROM properties
         WHERE location IS NOT NULL
@@ -109,22 +114,29 @@ async def _postgis_radius_search(
             :radius
         )
         AND is_available = true
+        {agent_filter}
     """)
-    result = await db.execute(sql, {
-        "lat": lat, "lng": lng, "radius": radius_metres
-    })
+    params = {"lat": lat, "lng": lng, "radius": radius_metres}
+    if agent_id:
+        params["agent_id"] = UUID(agent_id)
+    result = await db.execute(sql, params)
     return {row[0] for row in result.fetchall()}
 
 async def _fetch_properties_by_ids(
     ids: list[str],
     db: AsyncSession,
+    agent_id: str | None = None,
 ) -> list[Property]:
     if not ids:
         return []
+    filters = [
+        Property.id.in_([UUID(property_id) for property_id in ids]),
+        Property.is_available.is_(True),
+    ]
+    if agent_id:
+        filters.append(Property.agent_id == UUID(agent_id))
     result = await db.execute(
-        select(Property).where(
-            Property.id.in_([UUID(i) for i in ids])
-        )
+        select(Property).where(*filters)
     )
     props = result.scalars().all()
     id_order = {pid: idx for idx, pid in enumerate(ids)}

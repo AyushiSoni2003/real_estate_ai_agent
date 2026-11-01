@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Generic, TypeVar, Optional
+from app.schemas.property import PropertyResponse
 
 
 class PropertySearchParams(BaseModel):
@@ -29,3 +30,8 @@ T = TypeVar("T")
 class PaginatedResponse(BaseModel, Generic[T]):
     data: list[T]
     pagination: Pagination
+
+
+class SemanticPropertyResult(BaseModel):
+    property: PropertyResponse
+    similarity_score: float
