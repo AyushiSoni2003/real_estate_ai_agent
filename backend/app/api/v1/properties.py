@@ -11,6 +11,7 @@ from app.models.agent import Agent
 from app.schemas.property import PropertyCreate, PropertyResponse
 from app.schemas.search import PropertySearchParams, Pagination, PaginatedResponse
 from app.services.property_embedder import embed_and_index_property
+from app.services.vector_store import delete_property_vector
 
 router = APIRouter(prefix="/properties", tags=["properties"])
 
@@ -180,6 +181,7 @@ async def delete_property(
     if prop.agent_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this property")
     
+    await delete_property_vector(str(prop.id))
     await db.delete(prop)
     await db.flush()
 
