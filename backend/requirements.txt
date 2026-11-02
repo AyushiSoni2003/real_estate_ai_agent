@@ -30,7 +30,7 @@ langchain==0.3.30
 langchain-openai
 
 # Vector DB & Embeddings
-qdrant-client==1.18.0
+qdrant-client==1.17.1
 
 # Caching
 redis==5.0.7
