@@ -39,7 +39,18 @@ async def root():
 
 
 # Register API route modules
-from app.api.v1 import auth, leads, properties, appointments, messages, property_media, ai_interactions, follow_up_logs, lead_activities
+from app.api.v1 import (
+    auth,
+    leads,
+    properties,
+    appointments,
+    messages,
+    property_media,
+    ai_interactions,
+    follow_up_logs,
+    lead_activities,
+    search,
+)
 
 # Include all routers with /api/v1 prefix
 app.include_router(auth.router, prefix="/api/v1")
@@ -51,3 +62,4 @@ app.include_router(property_media.router, prefix="/api/v1")
 app.include_router(ai_interactions.router, prefix="/api/v1")
 app.include_router(follow_up_logs.router, prefix="/api/v1")
 app.include_router(lead_activities.router, prefix="/api/v1")
+app.include_router(search.router, prefix="/api/v1")
