@@ -1,9 +1,7 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from app.agents.state import AgentState
-from app.models.property import Property
 from app.models.lead import Lead
 from app.core.config import settings
 
@@ -35,35 +33,37 @@ async def qualify_lead_node(state: AgentState, db: AsyncSession) -> AgentState:
 
 async def match_properties_node(state: AgentState, db: AsyncSession) -> AgentState:
     """
-    Fetches up to 3 available properties that match the
-    lead's location preference. In Phase 4 this becomes
-    a vector search — for now it's a SQL query.
+    Finds up to 3 available properties using semantic and location search.
     """
-    lead: Lead = state["lead"]
-    query = (
-        select(Property)
-        .where(Property.is_available == True)
-        .where(Property.agent_id == lead.agent_id)
-    )
-    if lead.preferred_location:
-        query = query.where(
-            Property.city.ilike(f"%{lead.preferred_location}%")
-        )
-    if lead.budget_max:
-        query = query.where(Property.price <= lead.budget_max)
+    from app.services.search import semantic_property_search
 
-    result = await db.execute(query.limit(3))
-    props = result.scalars().all()
+    lead: Lead = state["lead"]
+    query_parts = []
+    if lead.preferred_location:
+        query_parts.append(f"near {lead.preferred_location}")
+    if lead.budget_max is not None:
+        query_parts.append(f"under {lead.budget_max:,} rupees")
+    if lead.notes:
+        query_parts.append(lead.notes)
+
+    query = " ".join(query_parts) if query_parts else "residential property"
+    results = await semantic_property_search(
+        query=query,
+        db=db,
+        agent_id=str(lead.agent_id),
+        top_k=3,
+    )
 
     matching = [
         {
-            "title": p.title,
-            "address": p.address,
-            "price": p.price,
-            "bedrooms": p.bedrooms,
-            "area_sqft": p.area_sqft,
+            "title": result["property"].title,
+            "address": result["property"].address,
+            "price": result["property"].price,
+            "bedrooms": result["property"].bedrooms,
+            "area_sqft": result["property"].area_sqft,
+            "similarity_score": result["similarity_score"],
         }
-        for p in props
+        for result in results
     ]
     return {**state, "matching_properties": matching}
 
